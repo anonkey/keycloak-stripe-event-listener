@@ -1,0 +1,41 @@
+version: "3.7"
+
+services:
+  keycloak-db:
+    container_name: keycloak-db
+    image: postgres:13-alpine
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: keycloak
+      POSTGRES_DB: keycloak
+    ports:
+      - 5432:5432
+    volumes:
+      - ./keycloak-db:/var/lib/postgresql/data
+
+  keycloak:
+    container_name: keycloak
+    image: jboss/keycloak:19.0.3
+    environment:
+      DB_VENDOR: postgres
+      DB_ADDR: keycloak-db
+      DB_DATABASE: keycloak
+      DB_PORT: 5432
+      DB_USER: keycloak
+      # DB_PASSWORD: password
+      # KEYCLOAK_USER: keycloak
+      KEYCLOAK_PASSWORD: password
+      ROOT_LOGLEVEL: DEBUG
+      KEYCLOAK_LOGLEVEL: DEBUG
+      WILDFLY_LOGLEVEL: INFO
+      DEBUG: "true"
+      DEBUG_PORT: '*:8787'
+      PROXY_ADDRESS_FORWARDING: "true"
+      STRIPE_API_KEY: sk_test_XXXX
+    volumes:
+      - type: bind
+        source: ./keycloak-stripe-event-listener/target/keycloak-stripe-event-listener.jar
+        target: /opt/jboss/keycloak/standalone/deployments/keycloak-stripe-event-listener.jar
+    ports:
+      - 8086:8080
+      - 8787:8787
